@@ -6,10 +6,11 @@ console.log "Haha"
 STEP_PIN = 13
 DIR_PIN  = 11
 
-write = ->
-	gpio.write STEP_PIN, true, (err) ->
+oneRev = (cb) ->
+	async.times 200, (cb) ->
+		gpio.write STEP_PIN, true, cb
+	, (err) ->
 		throw err if err
-		console.log "written yay!"
 
-gpio.setup STEP_PIN, gpio.DIR_OUT, write
+gpio.setup STEP_PIN, gpio.DIR_OUT, oneRev
 

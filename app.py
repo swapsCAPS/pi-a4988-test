@@ -1,33 +1,78 @@
 from time import sleep
+import string
 import RPi.GPIO as GPIO
 
 STEPS_PER_REV = 200
-ENABLE_PIN    = 27
 DIR_PIN       = 17
-PWM_PIN       = 18
+DRIVE_PIN     = 18
+ENABLE_PIN    = 27
+ENDSTOP       = 22
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(DIR_PIN,    GPIO.OUT)
-GPIO.setup(PWM_PIN,    GPIO.OUT)
-#  GPIO.setup(ENABLE_PIN, GPIO.OUT)
-GPIO.output(DIR_PIN, 0)
+GPIO.setup(DRIVE_PIN,  GPIO.OUT)
+GPIO.setup(ENABLE_PIN, GPIO.OUT)
 
-pwm = GPIO.PWM( PWM_PIN, 600 )
-pwm.start( 10 )
+GPIO.setup(ENDSTOP, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-try:
-	while True:
-		0 + 0
+GPIO.output(DIR_PIN,    0)
+GPIO.output(ENABLE_PIN, 0)
 
-except KeyboardInterrupt:
-	print "\n Well bye"
+steps = 200 * 65
 
-except:
-	print "oh noez!"
+def findEndStop():
+	print "Finding endstop : )"
+	global found
+	found = 0
 
-finally:
-	print "cleanup : )"
+	def closed(channel):
+		global found
+		found += 1
+		print "closed %s" % (found)
 
+	GPIO.output(DIR_PIN, 1)
+	GPIO.add_event_detect(ENDSTOP, GPIO.FALLING, callback=closed)
+	while 1:
 
-	GPIO.output(ENABLE_PIN, 1) # Hehe kapot but does what I want :p TODO
-	GPIO.cleanup()
+		if found > 0:
+			GPIO.remove_event_detect(ENDSTOP)
+			backOff()
+			break
+
+		step(.00075)
+
+def backOff():
+	print "Backing off : )"
+	global found
+	found = 0
+
+	def closed(channel):
+		global found
+		found += 1
+		print "back off closed %s" % (found)
+
+	GPIO.add_event_detect(ENDSTOP, GPIO.FALLING, callback=closed)
+
+	GPIO.output(DIR_PIN, 0)
+
+	for i in range(0, 200):
+		step(.00275)
+
+	GPIO.output(DIR_PIN, 1)
+	print "And searching sloooow"
+	found = 0
+	while 1:
+
+		if found > 0:
+			print "Really found na0 : )"
+			break
+
+		step(.005)
+
+def step(pause):
+	GPIO.output(DRIVE_PIN, 0)
+	sleep(pause)
+	GPIO.output(DRIVE_PIN, 1)
+	sleep(pause)
+
+findEndStop()

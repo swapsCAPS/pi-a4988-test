@@ -5,7 +5,7 @@ console.log "Haha"
 
 STEPS_PER_REV = 200
 DIR_PIN       = 11
-STEP_PIN      = 13
+STEP_PIN      = 12
 ENABLE_PIN    = 15
 TURNS         = 1
 TOTAL_STEPS   = TURNS * STEPS_PER_REV
@@ -19,6 +19,8 @@ async.series {
 				gpio.setup STEP_PIN, gpio.DIR_HIGH, cb
 			(cb) ->
 				gpio.setup DIR_PIN, gpio.DIR_HIGH, cb
+			(cb) ->
+				gpio.write ENABLE_PIN, 0, cb
 		], cb
 	turn: (cb) ->
 		# gpio.write STEP_PIN, true, cb
@@ -28,7 +30,7 @@ async.series {
 				setTimeout ->
 					console.log "written! #{i + 1} times"
 					gpio.write STEP_PIN, 0, cb
-				, 10
+				, 100
 		, cb
 	off: (cb) ->
 		gpio.write ENABLE_PIN, 1, cb

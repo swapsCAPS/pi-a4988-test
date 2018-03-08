@@ -1,6 +1,6 @@
-from time import sleep
+from   time     import sleep
 import string
-import RPi.GPIO as GPIO
+import RPi.GPIO as     GPIO
 
 STEPS_PER_REV = 200
 DIR_PIN       = 17
@@ -20,7 +20,7 @@ GPIO.output(ENABLE_PIN, 0)
 
 steps = 200 * 65
 
-def findEndStop():
+def home():
 	print "Finding endstop : )"
 	global found
 	found = 0
@@ -28,18 +28,19 @@ def findEndStop():
 	def closed(channel):
 		global found
 		found += 1
-		print "closed %s" % (found)
 
-	GPIO.output(DIR_PIN, 1)
+	GPIO.output(DIR_PIN, 0)
 	GPIO.add_event_detect(ENDSTOP, GPIO.FALLING, callback=closed)
-	while 1:
 
+	while True:
 		if found > 0:
 			GPIO.remove_event_detect(ENDSTOP)
 			backOff()
 			break
 
-		step(.00075)
+		step(.00100)
+
+	GPIO.remove_event_detect(ENDSTOP)
 
 def backOff():
 	print "Backing off : )"
@@ -53,12 +54,12 @@ def backOff():
 
 	GPIO.add_event_detect(ENDSTOP, GPIO.FALLING, callback=closed)
 
-	GPIO.output(DIR_PIN, 0)
+	GPIO.output(DIR_PIN, 1)
 
 	for i in range(0, 200):
 		step(.00275)
 
-	GPIO.output(DIR_PIN, 1)
+	GPIO.output(DIR_PIN, 0)
 	print "And searching sloooow"
 	found = 0
 	while 1:
@@ -73,6 +74,6 @@ def step(pause):
 	GPIO.output(DRIVE_PIN, 0)
 	sleep(pause)
 	GPIO.output(DRIVE_PIN, 1)
-	sleep(pause)
+	#  sleep(pause)
 
-findEndStop()
+home()
